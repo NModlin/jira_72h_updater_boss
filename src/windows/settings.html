@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - Jira 72h Updater Boss Edition</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 24px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      color: #333;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="url"],
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+      font-family: 'Courier New', monospace;
+    }
+
+    input:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #0052CC;
+    }
+
+    .info-box {
+      background-color: #E3FCEF;
+      border-left: 4px solid #00875A;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 4px;
+    }
+
+    .info-box h3 {
+      color: #00875A;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+
+    .info-box p {
+      color: #333;
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    .info-box a {
+      color: #0052CC;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .info-box a:hover {
+      text-decoration: underline;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 30px;
+    }
+
+    button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .btn-primary {
+      background-color: #0052CC;
+      color: white;
+      flex: 1;
+    }
+
+    .btn-primary:hover {
+      background-color: #0747A6;
+    }
+
+    .btn-test {
+      background-color: #00875A;
+      color: white;
+      flex: 1;
+    }
+
+    .btn-test:hover {
+      background-color: #006644;
+    }
+
+    .btn-secondary {
+      background-color: #f4f5f7;
+      color: #42526E;
+    }
+
+    .btn-secondary:hover {
+      background-color: #ebecf0;
+    }
+
+    .message {
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .message.success {
+      background-color: #E3FCEF;
+      color: #00875A;
+      border: 1px solid #00875A;
+    }
+
+    .message.error {
+      background-color: #FFEBE6;
+      color: #DE350B;
+      border: 1px solid #DE350B;
+    }
+
+    .message.show {
+      display: block;
+    }
+
+    .footer {
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid #e0e0e0;
+      text-align: center;
+      color: #999;
+      font-size: 11px;
+    }
+
+    small {
+      color: #666;
+      font-size: 12px;
+      margin-top: 5px;
+      display: block;
+    }
+
+    .checkbox-group {
+      margin-bottom: 10px;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      font-weight: normal;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      width: auto;
+      margin-right: 8px;
+      cursor: pointer;
+    }
+
+    .checkbox-label span {
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⚙️ Settings</h1>
+    <p class="subtitle">Jira 72h Updater - Boss Edition</p>
+
+    <form id="settingsForm">
+      <div class="form-group">
+        <label for="jiraUrl">Jira URL *</label>
+        <input 
+          type="url" 
+          id="jiraUrl" 
+          placeholder="https://your-company.atlassian.net"
+          required
+        >
+        <small>⚠️ Use only the base URL (e.g., https://rehrig.atlassian.net)<br>
+        ❌ Do NOT include project paths or /jira/servicedesk/...</small>
+      </div>
+
+      <div class="form-group">
+        <label for="userEmail">User Email *</label>
+        <input 
+          type="text" 
+          id="userEmail" 
+          placeholder="your.email@company.com"
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="apiToken">Jira API Token *</label>
+        <input 
+          type="password" 
+          id="apiToken" 
+          placeholder="Your API token"
+          required
+        >
+        <small style="color: #666; font-size: 12px; margin-top: 5px; display: block;">
+          Don't have a token? 
+          <a href="#" id="openTokenPageInline" style="color: #0052CC; text-decoration: none; font-weight: 500;">
+            Click here to create one →
+          </a>
+        </small>
+      </div>
+
+      <div class="form-group">
+        <label for="teamEmails">Team Member Emails *</label>
+        <textarea
+          id="teamEmails"
+          placeholder="Enter team member emails (one per line or comma-separated)&#10;Example:&#10;douglascampbell@rehrig.com&#10;sromero@Rehrig.com&#10;NModlin@Rehrig.com"
+          required
+          rows="6"
+        ></textarea>
+        <small>Enter the email addresses of team members whose tickets you want to monitor.</small>
+      </div>
+
+      <div class="form-group">
+        <label>Ticket Statuses to Monitor *</label>
+        <div class="checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="statusInProgress" value="In Progress" checked>
+            <span>In Progress</span>
+          </label>
+        </div>
+        <div class="checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="statusOpen" value="Open" checked>
+            <span>Open</span>
+          </label>
+        </div>
+        <div class="checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="statusWaitingSupport" value="Waiting for Support" checked>
+            <span>Waiting for Support</span>
+          </label>
+        </div>
+        <div class="checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="statusWaitingCustomer" value="Waiting for Customer" checked>
+            <span>Waiting for Customer</span>
+          </label>
+        </div>
+        <small>Select which ticket statuses you want to monitor for staleness.</small>
+      </div>
+
+      <div class="form-group">
+        <label for="hoursThreshold">Hours Without Update *</label>
+        <input
+          type="number"
+          id="hoursThreshold"
+          placeholder="72"
+          value="72"
+          min="1"
+          max="720"
+          required
+        >
+        <small>Get notified when tickets haven't been updated for this many hours (default: 72 hours = 3 days).</small>
+      </div>
+
+      <div class="info-box">
+        <h3>📝 How to get your Jira API Token</h3>
+        <p>
+          1. Click the button below to open Atlassian API Token page<br>
+          2. Click "Create API token"<br>
+          3. Give it a label (e.g., "Jira 72h Updater Boss")<br>
+          4. Copy the token and paste it in the field above
+        </p>
+        <p>
+          <a href="#" id="openTokenPage" style="display: inline-block; padding: 8px 16px; background-color: #0052CC; color: white; text-decoration: none; border-radius: 4px; font-weight: 500; margin-top: 5px;">
+            🔗 Create API Token
+          </a>
+        </p>
+      </div>
+
+      <div class="info-box" style="background-color: #E3FCEF; border-left-color: #00875A;">
+        <h3>✅ Boss Edition - Easy Team Monitoring</h3>
+        <p>
+          Simply enter your team members' emails above, select which statuses to monitor, and set the time threshold.
+          The app will automatically track all tickets assigned to your team members that match your criteria.
+        </p>
+      </div>
+
+      <div id="message" class="message"></div>
+
+      <div class="button-group">
+        <button type="button" class="btn-test" id="testBtn">Test Connection</button>
+        <button type="submit" class="btn-primary">Save Settings</button>
+        <button type="button" class="btn-secondary" id="cancelBtn">Cancel</button>
+      </div>
+    </form>
+    
+    <div class="footer">
+      Created by Nathan Modlin
+    </div>
+  </div>
+
+  <script src="settings.js"></script>
+</body>
+</html>
+
