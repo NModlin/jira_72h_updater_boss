@@ -44,7 +44,8 @@
       "target": [
         "dmg"
       ],
-      "icon": "assets/icon.png"
+      "icon": "assets/icon.png",
+      "identity": null
     },
     "win": {
       "target": [
