@@ -26,6 +26,8 @@ jobs:
         run: npm install
       
       - name: Build macOS installer
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run build:mac
       
       - name: Upload macOS installer
