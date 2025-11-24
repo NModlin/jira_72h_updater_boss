@@ -58,7 +58,8 @@
         }
       ],
       "icon": "assets/icon.png",
-      "identity": null
+      "identity": null,
+      "forceCodeSigning": false
     },
     "win": {
       "target": [
