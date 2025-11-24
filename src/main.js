@@ -1,9 +1,20 @@
-const { app, Tray, Menu, BrowserWindow, ipcMain, Notification, shell, nativeImage } = require('electron');
+const { app, Tray, Menu, BrowserWindow, ipcMain, Notification, shell, nativeImage, dialog } = require('electron');
 const path = require('path');
 const Store = require('electron-store');
 const JiraService = require('./services/jiraService');
 const NotificationHistory = require('./services/notificationHistory');
 const fs = require('fs');
+const os = require('os');
+
+// Setup error logging
+const logPath = path.join(app.getPath('userData'), 'error.log');
+process.on('uncaughtException', (error) => {
+  const errorMessage = `[${new Date().toISOString()}] Uncaught Exception: ${error.stack || error}\n`;
+  fs.appendFileSync(logPath, errorMessage);
+  console.error(errorMessage);
+  // Optional: Show dialog on fatal error
+  // dialog.showErrorBox('Unexpected Error', 'An error occurred. Please check the logs.');
+});
 
 const store = new Store();
 const notificationHistory = new NotificationHistory();
@@ -12,6 +23,7 @@ const notificationHistory = new NotificationHistory();
 let tray = null;
 let settingsWindow = null;
 let historyWindow = null;
+let dashboardWindow = null;
 let checkInterval = null;
 
 // Prevent multiple instances
@@ -24,11 +36,24 @@ if (!gotTheLock) {
 app.whenReady().then(() => {
   createTray();
   startBackgroundChecker();
+
+  // UX Improvement: Auto-open settings if not configured
+  const settings = store.get('jiraSettings');
+  if (!settings || !settings.jiraUrl || !settings.apiToken) {
+    openSettingsWindow();
+  }
 });
 
 app.on('window-all-closed', (e) => {
   // Don't quit the app when all windows are closed (tray app)
   e.preventDefault();
+});
+
+// macOS: Handle dock icon click
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    openSettingsWindow();
+  }
 });
 
 // Create fallback icon if main icon fails
@@ -41,7 +66,7 @@ function createFallbackIcon() {
 // Create system tray
 function createTray() {
   const iconPath = path.join(__dirname, '../assets/icon.png');
-  
+
   let trayIcon;
   if (fs.existsSync(iconPath)) {
     try {
@@ -67,9 +92,17 @@ function createTray() {
   }
 
   tray = new Tray(trayIcon);
-  tray.setToolTip('Jira 72h Updater - Boss Edition');
+  tray.setToolTip('Jira 72h Updater - Boss Edition with Dashboard');
 
   const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'Open Dashboard',
+      click: () => openDashboardWindow(),
+      type: 'normal'
+    },
+    {
+      type: 'separator'
+    },
     {
       label: 'Settings',
       click: () => openSettingsWindow()
@@ -95,6 +128,11 @@ function createTray() {
   ]);
 
   tray.setContextMenu(contextMenu);
+
+  // Double-click tray icon to open dashboard
+  tray.on('double-click', () => {
+    openDashboardWindow();
+  });
 }
 
 // Open Settings Window
@@ -147,6 +185,44 @@ function openHistoryWindow() {
   });
 }
 
+// Open Dashboard Window
+function openDashboardWindow() {
+  if (dashboardWindow) {
+    dashboardWindow.focus();
+    return;
+  }
+
+  dashboardWindow = new BrowserWindow({
+    width: 1400,
+    height: 900,
+    minWidth: 1200,
+    minHeight: 700,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false
+    },
+    title: 'Jira Boss Dashboard - Visual Analytics & AI Insights',
+    icon: path.join(__dirname, '../assets/icon.png')
+  });
+
+  // Load dashboard (dev or production)
+  const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+
+  if (isDev) {
+    // Development: Load from Vite dev server
+    dashboardWindow.loadURL('http://localhost:5173');
+    // dashboardWindow.webContents.openDevTools(); // Uncomment for debugging
+  } else {
+    // Production: Load from built files
+    dashboardWindow.loadFile(path.join(__dirname, '../dashboard/dist/index.html'));
+  }
+
+  dashboardWindow.on('closed', () => {
+    dashboardWindow = null;
+  });
+}
+
 // Background checker
 function startBackgroundChecker() {
   // Initial check after 5 seconds
@@ -165,7 +241,7 @@ async function performJiraCheck() {
   const settings = store.get('jiraSettings');
 
   if (!settings || !settings.jiraUrl || !settings.userEmail || !settings.apiToken ||
-      !settings.teamEmails || settings.teamEmails.length === 0) {
+    !settings.teamEmails || settings.teamEmails.length === 0) {
     console.log('Settings not configured, skipping check');
     return;
   }
@@ -183,7 +259,7 @@ async function performJiraCheck() {
 
   try {
     const tickets = await jiraService.getStaleTickets();
-    
+
     console.log(`Found ${tickets.length} stale tickets`);
 
     if (tickets.length === 0) {
@@ -198,7 +274,7 @@ async function performJiraCheck() {
     }
   } catch (error) {
     console.error('Jira check failed:', error);
-    
+
     if (error.status === 401) {
       sendErrorNotification();
     } else {
@@ -217,9 +293,21 @@ function sendTicketNotification(ticket) {
   });
 
   notification.on('click', () => {
+    // Open dashboard and send ticket key to highlight it
+    openDashboardWindow();
+
+    if (dashboardWindow) {
+      // Wait a bit for dashboard to load, then send ticket key
+      setTimeout(() => {
+        dashboardWindow.webContents.send('open-ticket', ticket.key);
+      }, 1000);
+    }
+
+    // Also open in browser as fallback
     const settings = store.get('jiraSettings');
     const ticketUrl = `${settings.jiraUrl}/browse/${ticket.key}`;
-    shell.openExternal(ticketUrl);
+    // Commenting out to use dashboard primarily
+    // shell.openExternal(ticketUrl);
   });
 
   notification.show();
@@ -305,3 +393,237 @@ ipcMain.on('open-external', (event, url) => {
   shell.openExternal(url);
 });
 
+// Dashboard IPC Handlers
+
+// Get settings for dashboard
+ipcMain.handle('get-settings', async () => {
+  return store.get('jiraSettings', {
+    jiraUrl: '',
+    userEmail: '',
+    apiToken: '',
+    teamEmails: [],
+    statuses: ['In Progress', 'Open', 'Waiting for Support', 'Waiting for Customer'],
+    hoursThreshold: 72
+  });
+});
+
+// Save settings from dashboard
+ipcMain.handle('save-settings', async (event, settings) => {
+  store.set('jiraSettings', settings);
+  return true;
+});
+
+// Fetch tickets using current JQL
+ipcMain.handle('fetch-tickets', async (event, customJQL) => {
+  const settings = store.get('jiraSettings');
+
+  if (!settings || !settings.jiraUrl || !settings.userEmail || !settings.apiToken) {
+    throw new Error('Please configure Jira settings first');
+  }
+
+  const jiraService = new JiraService(
+    settings.jiraUrl,
+    settings.userEmail,
+    settings.apiToken,
+    settings.teamEmails,
+    settings.statuses,
+    settings.hoursThreshold
+  );
+
+  try {
+    if (customJQL) {
+      // Use custom JQL if provided
+      return await jiraService.searchWithJQL(customJQL);
+    } else {
+      // Use default stale tickets query
+      return await jiraService.getStaleTickets();
+    }
+  } catch (error) {
+    console.error('Failed to fetch tickets:', error);
+    throw error;
+  }
+});
+
+// Fetch single ticket details
+ipcMain.handle('fetch-ticket-details', async (event, issueKey) => {
+  const settings = store.get('jiraSettings');
+
+  const jiraService = new JiraService(
+    settings.jiraUrl,
+    settings.userEmail,
+    settings.apiToken,
+    settings.teamEmails,
+    settings.statuses,
+    settings.hoursThreshold
+  );
+
+  return await jiraService.getIssueDetails(issueKey);
+});
+
+// Get current JQL query
+ipcMain.handle('get-jql', async () => {
+  const settings = store.get('jiraSettings');
+
+  if (!settings || !settings.jiraUrl) {
+    return 'project = HD AND updated <= -72h';
+  }
+
+  const jiraService = new JiraService(
+    settings.jiraUrl,
+    settings.userEmail,
+    settings.apiToken,
+    settings.teamEmails,
+    settings.statuses,
+    settings.hoursThreshold
+  );
+
+  return jiraService.buildJQL();
+});
+
+// Save custom JQL
+ipcMain.handle('save-jql', async (event, jql) => {
+  store.set('customJQL', jql);
+  return true;
+});
+
+// Test JQL query
+ipcMain.handle('test-jql', async (event, jql) => {
+  const settings = store.get('jiraSettings');
+
+  const jiraService = new JiraService(
+    settings.jiraUrl,
+    settings.userEmail,
+    settings.apiToken,
+    settings.teamEmails,
+    settings.statuses,
+    settings.hoursThreshold
+  );
+
+  try {
+    const results = await jiraService.searchWithJQL(jql);
+    return { success: true, count: results.length };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// Rovo AI integration
+ipcMain.handle('ask-rovo', async (event, question) => {
+  const settings = store.get('jiraSettings');
+
+  if (!settings || !settings.jiraUrl || !settings.apiToken) {
+    throw new Error('Jira not configured');
+  }
+
+  try {
+    // Call Atlassian Rovo API
+    const auth = Buffer.from(`${settings.userEmail}:${settings.apiToken}`).toString('base64');
+
+    const response = await fetch(`${settings.jiraUrl}/gateway/api/rovo/chat/v1/conversations`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${auth}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        messages: [
+          {
+            role: 'user',
+            content: question
+          }
+        ],
+        context: {
+          products: ['jira'],
+          sites: [settings.jiraUrl]
+        }
+      })
+    });
+
+    const data = await response.json();
+    return data.messages?.[0]?.content || 'Sorry, I could not generate a response.';
+  } catch (error) {
+    console.error('Rovo error:', error);
+    throw new Error('Failed to connect to Rovo AI');
+  }
+});
+
+// AI-generated graph data
+ipcMain.handle('generate-graph', async (event, request) => {
+  // This will use Rovo to interpret the request and return structured data
+  const settings = store.get('jiraSettings');
+
+  const prompt = `Based on this request: "${request}", generate a JSON response with chart data for Jira tickets. 
+  Return format: { "chartType": "bar|line|pie", "data": [...], "labels": [...], "title": "..." }`;
+
+  try {
+    const auth = Buffer.from(`${settings.userEmail}:${settings.apiToken}`).toString('base64');
+
+    const response = await fetch(`${settings.jiraUrl}/gateway/api/rovo/chat/v1/conversations`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${auth}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        messages: [
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        context: {
+          products: ['jira'],
+          sites: [settings.jiraUrl]
+        }
+      })
+    });
+
+    const data = await response.json();
+    const content = data.messages?.[0]?.content;
+
+    // Parse JSON from Rovo's response
+    try {
+      return JSON.parse(content);
+    } catch {
+      // If not JSON, return default structure
+      return {
+        chartType: 'bar',
+        data: [],
+        labels: [],
+        title: 'Unable to generate graph',
+        error: 'Could not parse AI response'
+      };
+    }
+  } catch (error) {
+    console.error('Generate graph error:', error);
+    throw error;
+  }
+});
+
+// Get notification history
+ipcMain.handle('get-history', async () => {
+  return notificationHistory.getAll();
+});
+
+// Window controls
+ipcMain.on('close-window', (event) => {
+  const window = BrowserWindow.fromWebContents(event.sender);
+  if (window) window.close();
+});
+
+ipcMain.on('minimize-window', (event) => {
+  const window = BrowserWindow.fromWebContents(event.sender);
+  if (window) window.minimize();
+});
+
+// Send notification from dashboard
+ipcMain.on('show-notification', (event, { title, body }) => {
+  const notification = new Notification({
+    title,
+    body,
+    icon: path.join(__dirname, '../assets/icon.png')
+  });
+  notification.show();
+});

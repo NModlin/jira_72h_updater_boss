@@ -1,14 +1,16 @@
 {
   "name": "jira-72h-updater-boss",
-  "version": "0.5.0",
-  "description": "Boss Edition - Desktop app to track team's Jira tickets that haven't been updated in 72 hours",
+  "version": "1.0.0",
+  "description": "Boss Edition with integrated visual dashboard - Track team's Jira tickets with AI-powered insights",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder",
-    "build:win": "electron-builder --win",
-    "build:mac": "electron-builder --mac",
-    "build:all": "electron-builder -mw"
+    "dev": "concurrently \"cd dashboard && npm run dev\" \"electron .\"",
+    "build:dashboard": "cd dashboard && npm run build",
+    "build": "npm run build:dashboard && electron-builder",
+    "build:win": "npm run build:dashboard && electron-builder --win",
+    "build:mac": "npm run build:dashboard && electron-builder --mac",
+    "build:all": "npm run build:dashboard && electron-builder -mw"
   },
   "keywords": [
     "jira",
@@ -22,7 +24,8 @@
   "license": "MIT",
   "devDependencies": {
     "electron": "^28.0.0",
-    "electron-builder": "^24.13.3"
+    "electron-builder": "^24.13.3",
+    "concurrently": "^8.2.2"
   },
   "optionalDependencies": {
     "dmg-license": "^1.0.11"
@@ -39,6 +42,7 @@
     },
     "files": [
       "src/**/*",
+      "dashboard/dist/**/*",
       "assets/**/*",
       "package.json"
     ],

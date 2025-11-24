@@ -46,7 +46,7 @@ class JiraService {
 
   async testConnection() {
     const url = `${this.jiraUrl}/rest/api/3/myself`;
-    
+
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -95,7 +95,7 @@ class JiraService {
     }
 
     const data = await response.json();
-    
+
     // Transform the response into a simpler format
     return data.issues.map(issue => ({
       key: issue.key,
@@ -104,6 +104,79 @@ class JiraService {
       updated: issue.fields.updated,
       assignee: issue.fields.assignee ? issue.fields.assignee.displayName : 'Unassigned'
     }));
+  }
+
+  // Search with custom JQL
+  async searchWithJQL(jql) {
+    const url = `${this.jiraUrl}/rest/api/3/search/jql`;
+
+    const body = {
+      jql: jql,
+      fields: ['summary', 'status', 'updated', 'assignee', 'priority', 'reporter', 'created', 'description'],
+      maxResults: 500
+    };
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': this.getAuthHeader(),
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!response.ok) {
+      const error = new Error(`Jira API error: ${response.status} ${response.statusText}`);
+      error.status = response.status;
+      throw error;
+    }
+
+    const data = await response.json();
+
+    // Transform the response
+    return data.issues.map(issue => ({
+      key: issue.key,
+      summary: issue.fields.summary,
+      status: issue.fields.status.name,
+      updated: issue.fields.updated,
+      created: issue.fields.created,
+      assignee: issue.fields.assignee ? issue.fields.assignee.displayName : 'Unassigned',
+      priority: issue.fields.priority ? issue.fields.priority.name : 'None',
+      reporter: issue.fields.reporter ? issue.fields.reporter.displayName : 'Unknown'
+    }));
+  }
+
+  // Get detailed information for a single issue
+  async getIssueDetails(issueKey) {
+    const url = `${this.jiraUrl}/rest/api/3/issue/${issueKey}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': this.getAuthHeader(),
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch issue ${issueKey}: ${response.status}`);
+    }
+
+    const issue = await response.json();
+
+    return {
+      key: issue.key,
+      summary: issue.fields.summary,
+      description: issue.fields.description,
+      status: issue.fields.status.name,
+      updated: issue.fields.updated,
+      created: issue.fields.created,
+      assignee: issue.fields.assignee ? issue.fields.assignee.displayName : 'Unassigned',
+      priority: issue.fields.priority ? issue.fields.priority.name : 'None',
+      reporter: issue.fields.reporter ? issue.fields.reporter.displayName : 'Unknown',
+      comments: issue.fields.comment ? issue.fields.comment.comments.length : 0
+    };
   }
 }
 
