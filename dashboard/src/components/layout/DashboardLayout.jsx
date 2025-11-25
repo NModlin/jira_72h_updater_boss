@@ -1,7 +1,9 @@
 import React from 'react';
 import Sidebar from './Sidebar';
 import FilterSidebar from './FilterSidebar';
+import DebugInfo from '../DebugInfo';
 import { useDashboard } from '../../context/DashboardContext';
+import { Outlet } from 'react-router-dom';
 
 const DashboardLayout = ({ children }) => {
     const { tickets } = useDashboard();
@@ -36,34 +38,40 @@ const DashboardLayout = ({ children }) => {
 
     return (
         <div className="flex h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
-            <Sidebar />
-            <main className="flex-1 overflow-y-auto p-8">
-                <div className="w-full">
-                    <div className="flex justify-between items-start mb-8">
-                        <div>
-                            <h2 className="text-2xl font-bold text-slate-800 dark:text-white">HD Dashboard</h2>
-                            <p className="text-slate-500 dark:text-slate-400 mt-1">Real-time overview of help desk performance</p>
-                        </div>
-                        <div className="flex gap-3">
-                            <button
-                                onClick={handleExport}
-                                className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                            >
-                                Export Report
-                            </button>
-                            <button className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200 dark:shadow-none">
-                                + New Ticket
-                            </button>
-                        </div>
+            {/* Main Content */}
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+                {/* Header */}
+                <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 h-16 flex items-center justify-between px-6 flex-shrink-0">
+                    <div>
+                        <h1 className="text-xl font-bold text-slate-800 dark:text-white">HD Dashboard</h1>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">Real-time overview of help desk performance</p>
                     </div>
-                    <div className="flex gap-6">
-                        <div className="flex-1 space-y-6">
-                            {children}
-                        </div>
-                        <FilterSidebar />
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={handleExport}
+                            className="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors border border-slate-200 dark:border-slate-700"
+                        >
+                            Export Report
+                        </button>
+                        <button className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors shadow-sm shadow-blue-600/20">
+                            + New Ticket
+                        </button>
                     </div>
-                </div>
-            </main>
+                </header>
+
+                {/* Scrollable Content Area */}
+                <main className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+                    <div className="w-full">
+                        <Outlet />
+                    </div>
+                </main>
+            </div>
+
+            {/* Right Sidebar - Filters */}
+            <FilterSidebar />
+
+            {/* Debug Overlay */}
+            <DebugInfo />
         </div>
     );
 };

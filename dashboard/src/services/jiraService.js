@@ -7,14 +7,9 @@ export const JiraService = {
     getTickets: async () => {
         // 1. Electron Mode
         if (window.electronAPI) {
-            try {
-                const jql = await window.electronAPI.getJQL();
-                const tickets = await window.electronAPI.fetchTickets(jql || 'project = HD AND status != Done');
-                return tickets || [];
-            } catch (error) {
-                console.error('Electron fetch failed:', error);
-                return [];
-            }
+            const jql = await window.electronAPI.getJQL();
+            const tickets = await window.electronAPI.fetchTickets(jql || 'project = HD AND status != Done');
+            return tickets || [];
         }
 
         // 2. Browser/Mock Mode

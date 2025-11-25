@@ -33,7 +33,7 @@ export const DashboardProvider = ({ children }) => {
             setError(null);
         } catch (err) {
             console.error('Error fetching dashboard data:', err);
-            setError('Failed to load tickets');
+            setError(err.message || 'Failed to load tickets');
         } finally {
             setLoading(false);
         }
