@@ -7,8 +7,9 @@ export const JiraService = {
     getTickets: async () => {
         // 1. Electron Mode
         if (window.electronAPI) {
-            const jql = await window.electronAPI.getJQL();
-            const tickets = await window.electronAPI.fetchTickets(jql || 'project = HD AND status != Done');
+            // Use a broad query to get all open tickets for the dashboard
+            // We ignore the stored JQL (which is for stale ticket notifications)
+            const tickets = await window.electronAPI.fetchTickets('project = HD AND status not in (Done, Closed, Resolved) ORDER BY created DESC');
             return tickets || [];
         }
 
