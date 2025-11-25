@@ -3,9 +3,8 @@ import Sidebar from './Sidebar';
 import FilterSidebar from './FilterSidebar';
 import DebugInfo from '../DebugInfo';
 import { useDashboard } from '../../context/DashboardContext';
-import { Outlet } from 'react-router-dom';
 
-const DashboardLayout = () => {
+const DashboardLayout = ({ children }) => {
     const { tickets } = useDashboard();
 
     const handleExport = () => {
@@ -62,7 +61,7 @@ const DashboardLayout = () => {
                 {/* Scrollable Content Area */}
                 <main className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
                     <div className="w-full">
-                        <Outlet />
+                        {children}
                     </div>
                 </main>
             </div>
