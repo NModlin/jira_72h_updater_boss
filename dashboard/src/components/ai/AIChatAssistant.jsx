@@ -35,42 +35,22 @@ const AIChatAssistant = () => {
                 setMessages(prev => [...prev, { role: 'assistant', content: response }]);
             } else {
                 // Fallback: Direct Rovo API call (for browser mode)
-                const jiraUrl = import.meta.env.VITE_JIRA_BASE_URL;
-                const email = import.meta.env.VITE_JIRA_USER_EMAIL;
-                const apiToken = import.meta.env.VITE_JIRA_API_TOKEN;
-
-                const auth = btoa(`${email}:${apiToken}`);
-
-                const response = await fetch(`${jiraUrl}/gateway/api/rovo/chat/v1/conversations`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Basic ${auth}`,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        messages: [
-                            {
-                                role: 'user',
-                                content: input
-                            }
-                        ],
-                        context: {
-                            products: ['jira'],
-                            sites: [jiraUrl]
-                        }
-                    })
-                });
-
-                const data = await response.json();
-                const aiResponse = data.messages?.[0]?.content || 'Sorry, I could not generate a response.';
-                setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
+                // Note: This likely won't work without CORS proxy in browser, but keeping for dev structure
+                setMessages(prev => [...prev, { role: 'assistant', content: "I'm running in browser mode. Please use the Electron app for full Rovo access." }]);
             }
         } catch (error) {
             console.error('Rovo error:', error);
+            let errorMessage = '⚠️ Could not connect to Atlassian Rovo.';
+
+            if (error.message && error.message.includes('Jira not configured')) {
+                errorMessage = '⚠️ Jira settings are missing. Please configure them in the Settings menu.';
+            } else {
+                errorMessage += ' Please check your Jira credentials and ensure Rovo is enabled for your organization.';
+            }
+
             setMessages(prev => [...prev, {
                 role: 'assistant',
-                content: '⚠️ Could not connect to Atlassian Rovo. Please check your Jira credentials and ensure Rovo is enabled for your organization.'
+                content: errorMessage
             }]);
         } finally {
             setIsLoading(false);
@@ -89,7 +69,7 @@ const AIChatAssistant = () => {
     }
 
     return (
-        <div className={`fixed ${isMinimized ? 'bottom-6 right-6 w-80' : 'bottom-6 right-6 w-96 h-[600px]'} bg-white rounded-xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden transition-all z-50`}>
+        <div className={`fixed ${isMinimized ? 'bottom-6 right-6 w-80' : 'bottom-6 right-6 w-96 h-[600px]'} bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden transition-all z-50`}>
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -109,12 +89,12 @@ const AIChatAssistant = () => {
             {!isMinimized && (
                 <>
                     {/* Messages */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-slate-950">
                         {messages.map((msg, idx) => (
                             <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                 <div className={`max-w-[80%] px-4 py-2 rounded-lg ${msg.role === 'user'
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-white border border-slate-200 text-slate-800'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200'
                                     }`}>
                                     <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                                 </div>
@@ -122,7 +102,7 @@ const AIChatAssistant = () => {
                         ))}
                         {isLoading && (
                             <div className="flex justify-start">
-                                <div className="bg-white border border-slate-200 px-4 py-2 rounded-lg">
+                                <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-lg">
                                     <div className="flex gap-1">
                                         <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                                         <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -135,7 +115,7 @@ const AIChatAssistant = () => {
                     </div>
 
                     {/* Input */}
-                    <div className="p-4 border-t border-slate-200 bg-white">
+                    <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
                         <div className="flex gap-2">
                             <input
                                 type="text"
@@ -143,12 +123,12 @@ const AIChatAssistant = () => {
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                                 placeholder="Ask Rovo about your Jira data..."
-                                className="flex-1 px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                className="flex-1 px-4 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm placeholder-slate-400 dark:placeholder-slate-500"
                             />
                             <button
                                 onClick={handleSend}
                                 disabled={!input.trim() || isLoading}
-                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white rounded-lg transition-colors flex items-center gap-2"
+                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white rounded-lg transition-colors flex items-center gap-2"
                             >
                                 <Send className="w-4 h-4" />
                             </button>

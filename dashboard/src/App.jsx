@@ -7,6 +7,10 @@ import TicketTable from './components/dashboard/TicketTable';
 import AIChatAssistant from './components/ai/AIChatAssistant';
 import AIGraphGenerator from './components/ai/AIGraphGenerator';
 import { DashboardProvider, useDashboard } from './context/DashboardContext';
+import { ThemeProvider } from './context/ThemeContext';
+import OpenTicketsView from './components/views/OpenTicketsView';
+import CompletedTicketsView from './components/views/CompletedTicketsView';
+import SLAView from './components/views/SLAView';
 
 function DashboardContent() {
   const { currentView } = useDashboard();
@@ -14,24 +18,9 @@ function DashboardContent() {
   const renderView = () => {
     switch (currentView) {
       case 'open-tickets':
-        return (
-          <>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <AssigneeChart />
-              <TrendChart />
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-1">
-                <RequestTypeTable />
-              </div>
-              <div className="lg:col-span-2">
-                <TicketTable />
-              </div>
-            </div>
-          </>
-        );
+        return <OpenTicketsView />;
       case 'completed':
-        return <div className="text-center text-slate-500 py-12">Completed Tickets view - Coming soon</div>;
+        return <CompletedTicketsView />;
       case 'trends':
         return (
           <>
@@ -45,7 +34,7 @@ function DashboardContent() {
       case 'backlog':
         return <div className="text-center text-slate-500 py-12">Backlog view - Coming soon</div>;
       case 'slas':
-        return <div className="text-center text-slate-500 py-12">SLAs view - Coming soon</div>;
+        return <SLAView />;
       default:
         return null;
     }
@@ -61,9 +50,11 @@ function DashboardContent() {
 
 function App() {
   return (
-    <DashboardProvider>
-      <DashboardContent />
-    </DashboardProvider>
+    <ThemeProvider>
+      <DashboardProvider>
+        <DashboardContent />
+      </DashboardProvider>
+    </ThemeProvider>
   );
 }
 
