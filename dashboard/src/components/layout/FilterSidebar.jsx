@@ -29,10 +29,10 @@ const FilterSection = ({ title, items, searchable = true }) => {
     };
 
     return (
-        <div className="border-b border-slate-200 pb-4">
+        <div className="border-b border-slate-200 dark:border-slate-700 pb-4">
             <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="w-full flex items-center justify-between text-sm font-semibold text-slate-700 mb-3 hover:text-slate-900"
+                className="w-full flex items-center justify-between text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3 hover:text-slate-900 dark:hover:text-white"
             >
                 <span>{title}</span>
                 {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -42,7 +42,7 @@ const FilterSection = ({ title, items, searchable = true }) => {
                 <div className="space-y-2">
                     <button
                         onClick={toggleAll}
-                        className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                        className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
                     >
                         {selectedItems.size === items.length ? 'Deselect All' : 'All'}
                     </button>
@@ -55,22 +55,22 @@ const FilterSection = ({ title, items, searchable = true }) => {
                                 placeholder="Search"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                className="w-full pl-8 pr-3 py-1.5 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-900 dark:text-white placeholder-slate-400"
                             />
                         </div>
                     )}
 
-                    <div className="max-h-48 overflow-y-auto space-y-1">
+                    <div className="max-h-48 overflow-y-auto space-y-1 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700">
                         {filteredItems.map((item) => (
                             <label
                                 key={item}
-                                className="flex items-center gap-2 text-sm text-slate-700 hover:bg-slate-50 px-2 py-1 rounded cursor-pointer"
+                                className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 px-2 py-1 rounded cursor-pointer transition-colors"
                             >
                                 <input
                                     type="checkbox"
                                     checked={selectedItems.has(item)}
                                     onChange={() => toggleItem(item)}
-                                    className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                                    className="w-4 h-4 text-blue-600 border-slate-300 dark:border-slate-600 rounded focus:ring-blue-500 bg-white dark:bg-slate-700"
                                 />
                                 <span className="text-xs">{item}</span>
                             </label>
@@ -126,9 +126,9 @@ const FilterSidebar = () => {
     ];
 
     return (
-        <div className="w-80 bg-white border-l border-slate-200 h-screen flex flex-col overflow-hidden">
-            <div className="p-4 border-b border-slate-200">
-                <h2 className="text-base font-semibold text-slate-800">Filters</h2>
+        <div className="w-80 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 h-screen flex flex-col overflow-hidden transition-colors duration-200">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800">
+                <h2 className="text-base font-semibold text-slate-800 dark:text-white">Filters</h2>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
