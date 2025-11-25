@@ -1,11 +1,22 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import StatCard from './StatCard';
-import { assigneeData } from '../../data/mockData';
 import { useTheme } from '../../context/ThemeContext';
+import { useDashboard } from '../../context/DashboardContext';
+import { JiraService } from '../../services/jiraService';
 
 const AssigneeChart = () => {
     const { isDarkMode } = useTheme();
+    const { tickets } = useDashboard();
+    const [chartData, setChartData] = useState([]);
+
+    useEffect(() => {
+        const loadData = async () => {
+            const data = await JiraService.getAssigneeStats(tickets);
+            setChartData(data);
+        };
+        loadData();
+    }, [tickets]);
 
     const axisColor = isDarkMode ? '#94a3b8' : '#64748b';
     const gridColor = isDarkMode ? '#334155' : '#e2e8f0';
@@ -18,7 +29,7 @@ const AssigneeChart = () => {
             <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                     layout="vertical"
-                    data={assigneeData}
+                    data={chartData}
                     margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
                 >
                     <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={gridColor} />

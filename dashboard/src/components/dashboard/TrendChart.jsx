@@ -1,11 +1,22 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import StatCard from './StatCard';
-import { trendData } from '../../data/mockData';
 import { useTheme } from '../../context/ThemeContext';
+import { useDashboard } from '../../context/DashboardContext';
+import { JiraService } from '../../services/jiraService';
 
 const TrendChart = () => {
     const { isDarkMode } = useTheme();
+    const { tickets } = useDashboard();
+    const [chartData, setChartData] = useState([]);
+
+    useEffect(() => {
+        const loadData = async () => {
+            const data = await JiraService.getTrendStats(tickets);
+            setChartData(data);
+        };
+        loadData();
+    }, [tickets]);
 
     const axisColor = isDarkMode ? '#94a3b8' : '#64748b';
     const gridColor = isDarkMode ? '#334155' : '#e2e8f0';
@@ -18,7 +29,7 @@ const TrendChart = () => {
         <StatCard title="# of Open Jira Tickets by Created Date" className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                    data={trendData}
+                    data={chartData}
                     margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                 >
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />

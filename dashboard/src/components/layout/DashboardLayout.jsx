@@ -1,23 +1,23 @@
 import React from 'react';
 import Sidebar from './Sidebar';
 import FilterSidebar from './FilterSidebar';
-import { mockTickets } from '../../data/mockData';
+import { useDashboard } from '../../context/DashboardContext';
 
 const DashboardLayout = ({ children }) => {
+    const { tickets } = useDashboard();
+
     const handleExport = () => {
-        // In a real app, this would likely fetch all data from the backend
-        // For now, we'll export the mock data
         const headers = ['ID', 'Summary', 'Status', 'Priority', 'Assignee', 'Reporter', 'Created'];
         const csvContent = [
             headers.join(','),
-            ...mockTickets.map(t => [
-                t.id,
-                `"${t.summary.replace(/"/g, '""')}"`, // Escape quotes
-                t.status,
-                t.priority,
-                t.assignee,
-                t.reporter,
-                t.created || new Date().toISOString().split('T')[0]
+            ...tickets.map(t => [
+                t.key || t.id,
+                `"${(t.fields?.summary || t.summary || '').replace(/"/g, '""')}"`, // Escape quotes
+                t.fields?.status?.name || t.status,
+                t.fields?.priority?.name || t.priority,
+                t.fields?.assignee?.displayName || t.assignee || 'Unassigned',
+                t.fields?.reporter?.displayName || t.reporter || 'Unknown',
+                t.fields?.created || t.created || new Date().toISOString().split('T')[0]
             ].join(','))
         ].join('\n');
 
