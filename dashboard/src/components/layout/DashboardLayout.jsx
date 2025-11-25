@@ -38,7 +38,7 @@ const DashboardLayout = ({ children }) => {
         <div className="flex h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
             <Sidebar />
             <main className="flex-1 overflow-y-auto p-8">
-                <div className="max-w-7xl mx-auto">
+                <div className="w-full">
                     <div className="flex justify-between items-start mb-8">
                         <div>
                             <h2 className="text-2xl font-bold text-slate-800 dark:text-white">HD Dashboard</h2>
