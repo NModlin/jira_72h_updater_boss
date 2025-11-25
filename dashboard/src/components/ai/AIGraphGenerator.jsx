@@ -40,7 +40,7 @@ const AIGraphGenerator = () => {
     const renderGraph = () => {
         if (!graphData || !graphData.data || graphData.data.length === 0) return null;
 
-        const { chartType, data, labels, title } = graphData;
+        const { chartType, data, labels } = graphData;
 
         // Prepare data for Recharts
         const formattedData = data.map((value, idx) => ({
