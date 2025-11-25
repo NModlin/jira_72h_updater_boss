@@ -5,7 +5,7 @@ import DebugInfo from '../DebugInfo';
 import { useDashboard } from '../../context/DashboardContext';
 import { Outlet } from 'react-router-dom';
 
-const DashboardLayout = ({ children }) => {
+const DashboardLayout = () => {
     const { tickets } = useDashboard();
 
     const handleExport = () => {
